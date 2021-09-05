@@ -1,0 +1,8 @@
+display: 'button'
+view_mode: 'below'
+show_instructions: false
+expiration: 3600
+frequency: 5000
+attempts: 0
+prune: true
+prune_responses: true

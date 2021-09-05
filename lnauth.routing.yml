@@ -1,0 +1,40 @@
+lnauth.admin:
+  path: '/admin/config/people/lnauth'
+  defaults:
+    _title: 'Lightning Network Authentication'
+    _form: 'Drupal\lnauth\Form\AdminForm'
+  requirements:
+    _permission: 'administer lnauth'
+
+lnauth.login:
+  path: '/lnauth/login'
+  defaults:
+    _title: 'Login With Lightning'
+    _controller: '\Drupal\lnauth\Controller\LnAuthController::login'
+  requirements:
+    _access: 'TRUE'
+
+lnauth.qrcode:
+  path: '/lnauth/qrcode/{data}'
+  defaults:
+    _controller: '\Drupal\lnauth\Controller\QrCodeController::image'
+    _title: 'QR Code'
+    data: ''
+  requirements:
+    _access: 'TRUE'
+
+lnauth.callback:
+  path: '/lnauth/callback'
+  defaults:
+    _title: 'Lightning Network Authentication'
+    _controller: '\Drupal\lnauth\Controller\LnAuthController::callback'
+  requirements:
+    _access: 'TRUE'
+
+lnauth.check:
+  path: '/lnauth/check'
+  defaults:
+    _title: 'Lightning Network Authentication Check'
+    _controller: '\Drupal\lnauth\Controller\LnAuthController::check'
+  requirements:
+    _access: 'TRUE'

@@ -1,0 +1,12 @@
+default:
+  css:
+    theme:
+      css/lnauth.css: {}
+  js:
+    js/lnauth.js: {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings

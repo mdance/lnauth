@@ -1,0 +1,23 @@
+{
+  "name": "mdance/lnauth",
+  "description": "Provides lnauth functionality.",
+  "license": "Unlicense",
+  "authors": [
+    {
+      "name": "Michael Dance",
+      "email": "michael.dance@gmail.com"
+    }
+  ],
+  "repositories": [
+      {
+          "type": "vcs",
+          "url": "https://github.com/mdance/BitcoinECDSA.php"
+      }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+      "bacon/bacon-qr-code": "^2.0",
+      "tkijewski/php-lnurl": "^0.0.1",
+      "bitcoin-php/bitcoin-ecdsa": "master"
+  }
+}

@@ -1,0 +1,5 @@
+lnauth.admin:
+  title: Lightning Network Authentication
+  route_name: lnauth.admin
+  parent: user.admin_index
+  description: 'Configure lightning network authentication functionality.'

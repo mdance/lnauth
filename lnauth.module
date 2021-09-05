@@ -1,0 +1,49 @@
+<?php
+/**
+ * @file
+ * Provides lightning network authentication functionality.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\lnauth\LnAuthConstants;
+
+/**
+ * Implements hook_form_alter().
+ */
+function lnauth_form_user_login_form_alter(&$form, FormStateInterface $form_state) {
+  /** @var \Drupal\lnauth\LnAuthServiceInterface $service */
+  $service = \Drupal::service('lnauth');
+
+  $view_mode = $service->getViewMode();
+
+  if ($view_mode != 'hidden') {
+    $content = $service->renderLogin();
+
+    switch ($view_mode) {
+      case 'above':
+        $content['#weight'] = -1000;
+
+        break;
+      case 'below':
+        $content['#weight'] = 1000;
+
+        break;
+      case 'replace':
+        $form['#pre_render'][] = [
+          'Drupal\lnauth\LnAuthService',
+          'loginFormPreRender',
+        ];
+
+        break;
+    }
+
+    $form[LnAuthConstants::KEY_LOGIN_FORM] = $content;
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function lnauth_cron() {
+  \Drupal::service('lnauth')->cron();
+}

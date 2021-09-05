@@ -1,0 +1,104 @@
+<?php
+/**
+ * @file
+ * Provides install, and update hooks.
+ */
+
+use Drupal\lnauth\LnAuthConstants;
+
+/**
+ * Implements hook_schema().
+ */
+function lnauth_schema() {
+  $output = [];
+
+  $output[LnAuthConstants::TABLE_CHALLENGES] = [
+    'description' => 'Provides lightning network authentication challenges.',
+    'fields' => [
+      'id' => [
+        'description' => 'Provides the id.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Provides the creation date.',
+      ),
+      'updated' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Provides the updated date.',
+      ),
+      'challenge' => [
+        'description' => 'Provides the challenge',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'status' => [
+        'description' => 'Provides the status',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => LnAuthConstants::STATUS_NEW,
+      ],
+    ],
+    'indexes' => [
+      'challenge' => ['challenge'],
+    ],
+    'primary key' => ['id'],
+  ];
+
+  $output[LnAuthConstants::TABLE_RESPONSES] = [
+    'description' => 'Provides lightning network authentication responses.',
+    'fields' => [
+      'id' => [
+        'description' => 'Provides the id.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'challenge_id' => [
+        'description' => 'Provides the challenge id.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Provides the creation date.',
+      ),
+      'signature' => [
+        'description' => 'Provides the signature.',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big',
+      ],
+      'key' => [
+        'description' => 'Provides the public key.',
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'length' => 255,
+        'default' => '',
+      ],
+      'status' => [
+        'description' => 'Provides the status.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => LnAuthConstants::STATUS_INVALID,
+      ],
+    ],
+    'indexes' => [
+      'key' => ['key'],
+    ],
+    'primary key' => ['id'],
+  ];
+
+  return $output;
+}

@@ -1,0 +1,7 @@
+name: Lightning Network Authentication
+type: module
+description: 'Provides lightning network authentication functionality.'
+package: Lightning
+core_version_requirement: ^8 || ^9
+depenencies:
+  - drupal/externalauth

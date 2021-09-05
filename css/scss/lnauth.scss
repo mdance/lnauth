@@ -1,0 +1,34 @@
+.btn-lightning {
+  width: 100%;
+  max-width: 250px;
+
+  font-weight: bold;
+  font-size: 0.9em;
+
+  color: #212529;
+  background-color: #fada5e;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid #fada5e;
+  border-radius: .25rem;
+  margin: 1em 0;
+  padding: .375rem .75rem;
+  line-height: 1.5;
+  transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+
+.btn-lightning:hover,
+.btn-lightning:active,
+.btn-lightning:link,
+.btn-lightning:visited {
+  color: #212529;
+  border-color: #fada5e;
+  background-color: #fada5e;
+}
