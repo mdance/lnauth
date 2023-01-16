@@ -71,6 +71,7 @@ class LnAuthController implements ContainerInjectionInterface {
         $error = FALSE;
       }
     } catch (\Exception $e) {
+      watchdog_exception('lnauth', $e);
     }
 
     if ($error) {
