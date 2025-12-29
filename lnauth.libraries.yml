@@ -6,7 +6,7 @@ default:
     js/lnauth.js: {}
   dependencies:
     - core/jquery
-    - core/jquery.once
+    - core/once
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings
