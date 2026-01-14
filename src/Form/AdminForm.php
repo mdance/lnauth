@@ -2,12 +2,11 @@
 
 namespace Drupal\lnauth\Form;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\lnauth\LnAuthConstants;
 use Drupal\lnauth\LnAuthServiceInterface;
-use Drupal\lnauth\LnAuthServiceTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -15,52 +14,46 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class AdminForm extends ConfigFormBase {
 
-  use LnAuthServiceTrait;
-
   /**
-   * {@inheritDoc}
+   * Provides the constructor method.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The configuration factory service.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed config manager.
+   * @param \Drupal\lnauth\LnAuthServiceInterface $service
+   *   The module service.
    */
   public function __construct(
-    ConfigFactoryInterface $config_factory,
-    LnAuthServiceInterface $lnauth
+    protected $configFactory,
+    protected TypedConfigManagerInterface $typedConfigManager,
+    protected LnAuthServiceInterface $service,
   ) {
-    parent::__construct($config_factory);
-
-    $this->lnauth = $lnauth;
+    parent::__construct($configFactory, $typedConfigManager);
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory'),
-      $container->get('lnauth')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'lnauth_admin';
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEditableConfigNames() {
+  protected function getEditableConfigNames(): array {
     return [LnAuthConstants::SETTINGS];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     $key = LnAuthConstants::KEY_DISPLAY;
 
-    $default_value = $this->lnauth()->getDisplay();
-    $options = $this->lnauth()->getDisplayOptions();
+    $default_value = $this->service->getDisplay();
+    $options = $this->service->getDisplayOptions();
 
     $form[$key] = [
       '#type' => 'radios',
@@ -71,8 +64,8 @@ class AdminForm extends ConfigFormBase {
 
     $key = LnAuthConstants::KEY_VIEW_MODE;
 
-    $default_value = $this->lnauth()->getViewMode();
-    $options = $this->lnauth()->getViewModeOptions();
+    $default_value = $this->service->getViewMode();
+    $options = $this->service->getViewModeOptions();
 
     $form[$key] = [
       '#type' => 'radios',
@@ -83,7 +76,7 @@ class AdminForm extends ConfigFormBase {
 
     $key = LnAuthConstants::KEY_SHOW_INSTRUCTIONS;
 
-    $default_value = $this->lnauth()->getShowInstructions();
+    $default_value = $this->service->getShowInstructions();
 
     $form[$key] = [
       '#type' => 'checkbox',
@@ -93,7 +86,7 @@ class AdminForm extends ConfigFormBase {
 
     $key = LnAuthConstants::KEY_EXPIRATION;
 
-    $default_value = $this->lnauth()->getExpiration();
+    $default_value = $this->service->getExpiration();
 
     $form[$key] = [
       '#type' => 'number',
@@ -104,7 +97,7 @@ class AdminForm extends ConfigFormBase {
 
     $key = LnAuthConstants::KEY_FREQUENCY;
 
-    $default_value = $this->lnauth()->getFrequency();
+    $default_value = $this->service->getFrequency();
 
     $form[$key] = [
       '#type' => 'number',
@@ -115,7 +108,7 @@ class AdminForm extends ConfigFormBase {
 
     $key = LnAuthConstants::KEY_ATTEMPTS;
 
-    $default_value = $this->lnauth()->getAttempts();
+    $default_value = $this->service->getAttempts();
 
     $form[$key] = [
       '#type' => 'number',
@@ -126,7 +119,7 @@ class AdminForm extends ConfigFormBase {
 
     $key = LnAuthConstants::KEY_PRUNE;
 
-    $default_value = $this->lnauth()->getPrune();
+    $default_value = $this->service->getPrune();
 
     $form[$key] = [
       '#type' => 'checkbox',
@@ -136,7 +129,7 @@ class AdminForm extends ConfigFormBase {
 
     $key = LnAuthConstants::KEY_PRUNE_RESPONSES;
 
-    $default_value = $this->lnauth()->getPruneResponses();
+    $default_value = $this->service->getPruneResponses();
 
     $form[$key] = [
       '#type' => 'checkbox',
@@ -160,10 +153,21 @@ class AdminForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->cleanValues()->getValues();
 
-    $this->lnauth()->saveConfiguration($values);
-    $this->lnauth()->purgeCache();
+    $this->service->saveConfiguration($values);
+    $this->service->purgeCache();
 
     parent::submitForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory'),
+      $container->get('config.typed'),
+      $container->get('lnauth'),
+    );
   }
 
 }

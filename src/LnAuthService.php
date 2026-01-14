@@ -4,6 +4,7 @@ namespace Drupal\lnauth;
 
 use BitcoinPHP\BitcoinECDSA\BitcoinECDSA;
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Link;
@@ -23,169 +24,111 @@ class LnAuthService implements LnAuthServiceInterface {
   use StringTranslationTrait;
 
   /**
-   * Provides the config factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
    * Provides the config.
-   *
-   * @var \Drupal\Core\Config\Config
    */
-  protected $config;
+  protected Config $config;
 
-  /**
-   * Provides the state service.
-   *
-   * @var \Drupal\Core\State\StateInterface
-   */
-  protected $state;
-
-  /**
-   * Provides the database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
-
-  /**
-   * Provides the logger.
-   *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
-   */
-  protected $logger;
-
-  /**
-   * Provides the external authentication service.
-   *
-   * @var \Drupal\externalauth\ExternalAuthInterface
-   */
-  protected $externalAuth;
-
-  /**
-   * Provides the renderer.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * {@inheritDoc}
-   */
   public function __construct(
-    ConfigFactoryInterface $config_factory,
-    StateInterface $state,
-    Connection $connection,
-    LoggerChannelInterface $logger,
-    ExternalAuthInterface $external_auth,
-    RendererInterface $renderer,
-    KillSwitch $kill_switch
+    protected ConfigFactoryInterface $configFactory,
+    protected StateInterface $state,
+    protected Connection $connection,
+    protected LoggerChannelInterface $logger,
+    protected ExternalAuthInterface $externalAuth,
+    protected RendererInterface $renderer,
+    protected KillSwitch $killSwitch,
   ) {
-    $this->configFactory = $config_factory;
-    $this->config = $config_factory->getEditable(LnAuthConstants::SETTINGS);
-    $this->state = $state;
-    $this->connection = $connection;
-    $this->logger = $logger;
-    $this->externalAuth = $external_auth;
-    $this->renderer = $renderer;
-    $this->killSwitch = $kill_switch;
+    $this->config = $configFactory->getEditable(LnAuthConstants::SETTINGS);
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getDisplay() {
+  public function getDisplay(): string {
     return $this->config->get(LnAuthConstants::KEY_DISPLAY) ?? LnAuthConstants::DISPLAY_BUTTON;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getDisplayOptions() {
-    $output = [
+  public function getDisplayOptions(): array {
+    return [
       LnAuthConstants::DISPLAY_BUTTON => $this->t('Button'),
       LnAuthConstants::DISPLAY_QR => $this->t('QR Code'),
     ];
-
-    return $output;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getViewMode() {
+  public function getViewMode(): string {
     return $this->config->get(LnAuthConstants::KEY_VIEW_MODE) ?? LnAuthConstants::VIEW_MODE_DISPLAY_BELOW;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getViewModeOptions() {
-    $output = [
+  public function getViewModeOptions(): array {
+    return [
       LnAuthConstants::VIEW_MODE_DISPLAY_BELOW => $this->t('Below'),
       LnAuthConstants::VIEW_MODE_DISPLAY_ABOVE => $this->t('Above'),
       LnAuthConstants::VIEW_MODE_REPLACE => $this->t('Replace'),
       LnAuthConstants::VIEW_MODE_HIDDEN => $this->t('Hidden'),
     ];
-
-    return $output;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getShowButton() {
+  public function getShowButton(): bool {
     return $this->config->get(LnAuthConstants::KEY_SHOW_BUTTON) ?? TRUE;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getShowInstructions() {
+  public function getShowInstructions(): bool {
     return $this->config->get(LnAuthConstants::KEY_SHOW_INSTRUCTIONS) ?? TRUE;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getExpiration() {
+  public function getExpiration(): int {
     return $this->config->get(LnAuthConstants::KEY_EXPIRATION) ?? LnAuthConstants::EXPIRATION;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getFrequency() {
+  public function getFrequency(): int {
     return $this->config->get(LnAuthConstants::KEY_FREQUENCY) ?? LnAuthConstants::FREQUENCY;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getAttempts() {
+  public function getAttempts(): int {
     return $this->config->get(LnAuthConstants::KEY_ATTEMPTS) ?? LnAuthConstants::ATTEMPTS;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getPrune() {
+  public function getPrune(): bool {
     return $this->config->get(LnAuthConstants::KEY_PRUNE) ?? TRUE;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getPruneResponses() {
+  public function getPruneResponses(): bool {
     return $this->config->get(LnAuthConstants::KEY_PRUNE_RESPONSES) ?? TRUE;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function saveConfiguration(array $input) {
+  public function saveConfiguration(array $input): self {
     $keys = [
       LnAuthConstants::KEY_DISPLAY,
       LnAuthConstants::KEY_VIEW_MODE,
@@ -227,12 +170,14 @@ class LnAuthService implements LnAuthServiceInterface {
     if ($save) {
       $this->state->set(LnAuthConstants::STATE, $state);
     }
+
+    return $this;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function renderLogin() {
+  public function renderLogin(): array {
     $output = [];
 
     $view_mode = $this->getViewMode();
@@ -312,7 +257,7 @@ EOF;
   /**
    * {@inheritDoc}
    */
-  public function renderQrCode() {
+  public function renderQrCode(): array {
     $attributes = [];
 
     $data = $this->getCallbackUrl($k1)->toString();
@@ -387,7 +332,7 @@ EOF;
   /**
    * {@inheritDoc}
    */
-  public function getCallbackUrl(&$k1) {
+  public function getCallbackUrl(&$k1): Url {
     $route_name = LnAuthConstants::ROUTE_CALLBACK;
 
     $options = [
@@ -406,33 +351,27 @@ EOF;
     $query[LnAuthConstants::KEY_TAG] = LnAuthConstants::TAG_LOGIN;
     $query['XDEBUG_SESSION_START'] = 'phpstorm';
 
-    $output = new Url($route_name, [], $options);
-
-    return $output;
+    return new Url($route_name, [], $options);
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getK1() {
+  public function getK1(): string {
     if (extension_loaded('openssl')) {
       $output = openssl_random_pseudo_bytes(32);
     } else {
       $output = random_bytes(32);
     }
 
-    $output = bin2hex($output);
-
-    return $output;
+    return bin2hex($output);
   }
 
   /**
    * {@inheritDoc}
    */
-  public function bech32Encode($input) {
-    $output = encodeUrl($input);
-
-    return $output;
+  public function bech32Encode($input): string {
+    return encodeUrl($input);
   }
 
   /**
@@ -449,9 +388,7 @@ EOF;
 
     $query->fields($fields);
 
-    $output = $query->execute();
-
-    return $output;
+    return $query->execute();
   }
 
   /**
@@ -464,9 +401,7 @@ EOF;
     $query->condition('challenge', $input);
 
     $output = $query->execute();
-    $output = $output->fetchAll();
-
-    return $output;
+    return $output->fetchAll();
   }
 
   /**
@@ -593,14 +528,14 @@ EOF;
   /**
    * {@inheritDoc}
    */
-  public function getAuthName($input) {
+  public function getAuthName($input): string {
     return hash('sha1', $input);
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getCheckUrl($k1) {
+  public function getCheckUrl($k1): Url {
     $route_name = LnAuthConstants::ROUTE_CHECK;
 
     $options = [
@@ -627,9 +562,7 @@ EOF;
     $query->condition('challenge_id', $input);
 
     $output = $query->execute();
-    $output = $output->fetchAll();
-
-    return $output;
+    return $output->fetchAll();
   }
 
   /**
@@ -665,7 +598,7 @@ EOF;
   /**
    * {@inheritDoc}
    */
-  public function cron() {
+  public function cron(): void {
     if ($this->getPrune()) {
       $this->pruneChallenges();
     }
@@ -678,7 +611,7 @@ EOF;
   /**
    * {@inheritDoc}
    */
-  public function pruneChallenges() {
+  public function pruneChallenges(): void {
     $query = $this->connection->delete(LnAuthConstants::TABLE_CHALLENGES);
 
     $expiration = $this->getExpiration();
@@ -693,7 +626,7 @@ EOF;
   /**
    * {@inheritDoc}
    */
-  public function pruneResponses() {
+  public function pruneResponses(): void {
     $keys = [];
 
     $query = $this->connection->select('authmap', 'a');
@@ -725,7 +658,7 @@ EOF;
   /**
    * {@inheritDoc}
    */
-  public function purgeCache() {
+  public function purgeCache(): void {
     $query = $this->connection->delete('cache_page');
 
     $query->condition('cid', '%user/login%', 'LIKE');
