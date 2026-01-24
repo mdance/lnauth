@@ -4,6 +4,8 @@ namespace Drupal\lnauth;
 
 
 use Drupal\Core\Render\Element\RenderCallbackInterface;
+use Drupal\Core\Url;
+use Drupal\user\UserInterface;
 
 /**
  * Provides the LnAuthService class.
@@ -16,7 +18,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return string
    *   A string containing the display.
    */
-  public function getDisplay();
+  public function getDisplay(): string;
 
   /**
    * Gets the display options.
@@ -24,7 +26,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return array
    *   An array of display options.
    */
-  public function getDisplayOptions();
+  public function getDisplayOptions(): array;
 
   /**
    * Gets the view mode.
@@ -32,7 +34,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return string
    *   A string containing the view mode.
    */
-  public function getViewMode();
+  public function getViewMode(): string;
 
   /**
    * Gets the view mode options.
@@ -40,7 +42,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return array
    *   An array of view modes options.
    */
-  public function getViewModeOptions();
+  public function getViewModeOptions(): array;
 
   /**
    * Gets the show button status.
@@ -48,7 +50,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return bool
    *   A bool indicating whether to show the button.
    */
-  public function getShowButton();
+  public function getShowButton(): bool;
 
   /**
    * Gets the show instructions.
@@ -56,7 +58,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return bool
    *   A bool indicating whether to show the instructions.
    */
-  public function getShowInstructions();
+  public function getShowInstructions(): bool;
 
   /**
    * Gets the expiration.
@@ -64,7 +66,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return int
    *   An int containing the expiration.
    */
-  public function getExpiration();
+  public function getExpiration(): int;
 
   /**
    * Gets the frequency.
@@ -72,7 +74,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return int
    *   An int containing the frequency.
    */
-  public function getFrequency();
+  public function getFrequency(): int;
 
   /**
    * Gets the attempts.
@@ -80,23 +82,23 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return int
    *   An int containing the attempts.
    */
-  public function getAttempts();
+  public function getAttempts(): int;
 
   /**
    * Gets the prune status.
    *
-   * @return int
+   * @return bool
    *   An bool containing the prune status.
    */
-  public function getPrune();
+  public function getPrune(): bool;
 
   /**
    * Gets the prune responses status.
    *
-   * @return int
+   * @return bool
    *   An bool containing the prune responses status.
    */
-  public function getPruneResponses();
+  public function getPruneResponses(): bool;
 
   /**
    * Saves the configuration.
@@ -106,16 +108,16 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    *
    * @return $this
    */
-  public function saveConfiguration(array $input);
+  public function saveConfiguration(array $input): self;
 
   /**
    * Gets the login form render array.
    *
-   * @return array|mixed[]
+   * @return array
    *   The login form render array.
    * @throws \Exception
    */
-  public function renderLogin();
+  public function renderLogin(): array;
 
   /**
    * Gets the login QR code.
@@ -123,7 +125,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return array
    *   The login qr code render array.
    */
-  public function renderQrCode();
+  public function renderQrCode(): array;
 
   /**
    * Gets the callback url.
@@ -134,7 +136,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return \Drupal\Core\Url
    *   The callback url.
    */
-  public function getCallbackUrl(&$k1);
+  public function getCallbackUrl(string &$k1): Url;
 
   /**
    * Gets the K1.
@@ -143,7 +145,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    *    A string containing the K1.
    * @throws \Exception
    */
-  public function getK1();
+  public function getK1(): string;
 
   /**
    * Encodes a bech32 string.
@@ -155,7 +157,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    *   The bech32 encoded string.
    * @throws \BitWasp\Bech32\Exception\Bech32Exception
    */
-  public function bech32Encode($input);
+  public function bech32Encode(string $input): string;
 
   /**
    * Creates a challenge.
@@ -167,7 +169,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    *   The challenge record.
    * @throws \Exception
    */
-  public function createChallenge($input);
+  public function createChallenge(string $input);
 
   /**
    * Gets challenges.
@@ -175,10 +177,10 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @param string $input
    *   A string containing the challenge.
    *
-   * @return mixed
+   * @return array
    *   An array of challenges.
    */
-  public function getChallenge($input);
+  public function getChallenge(string $input): array;
 
   /**
    * Verify a challenge.
@@ -189,7 +191,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return bool
    *   A boolean indicating the challenge validity.
    */
-  public function verifyChallenge($parameters);
+  public function verifyChallenge(array $parameters): bool;
 
   /**
    * Gets the authname.
@@ -200,7 +202,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return string
    *   A sha1 hashed output of the authname.
    */
-  public function getAuthName($input);
+  public function getAuthName(string $input): string;
 
   /**
    * Gets the check url.
@@ -211,7 +213,7 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return \Drupal\Core\Url
    *   The check url.
    */
-  public function getCheckUrl($k1);
+  public function getCheckUrl(string $k1): Url;
 
   /**
    * Gets the challenge responses.
@@ -219,10 +221,10 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @param int $input
    *   The challenge id.
    *
-   * @return mixed
+   * @return array
    *   An array of challenge responses.
    */
-  public function getChallengeResponses($input);
+  public function getChallengeResponses(int $input): array;
 
   /**
    * Logs in a key user.
@@ -233,26 +235,26 @@ interface LnAuthServiceInterface extends RenderCallbackInterface {
    * @return bool|\Drupal\user\UserInterface
    *   The logged in user, otherwise false.
    */
-  public function loginKey($input);
+  public function loginKey(string $input): bool|UserInterface;
 
   /**
    * Performs cron processing.
    */
-  public function cron();
+  public function cron(): void;
 
   /**
    * Prunes the challenges.
    */
-  public function pruneChallenges();
+  public function pruneChallenges(): void;
 
   /**
    * Prunes the challenge responses.
    */
-  public function pruneResponses();
+  public function pruneResponses(): void;
 
   /**
    * Purges the caches.
    */
-  public function purgeCache();
+  public function purgeCache(): void;
 
 }

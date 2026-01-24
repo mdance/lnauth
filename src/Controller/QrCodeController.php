@@ -25,7 +25,10 @@ class QrCodeController extends ControllerBase {
    * @return mixed
    *   The QR code image.
    */
-  public function image($data = '', ?Request $request = NULL) {
+  public function image(
+    string $data = '',
+    ?Request $request = NULL,
+  ): Response {
     $data = $request->query->get('data', $data);
 
     $style = new RendererStyle(300);

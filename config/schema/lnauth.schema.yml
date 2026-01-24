@@ -1,0 +1,28 @@
+lnauth.settings:
+  type: config_object
+  label: 'Lightning Network Authentication Settings'
+  mapping:
+    display:
+      type: string
+      label: 'Display Mode'
+    view_mode:
+      type: string
+      label: 'View Mode'
+    show_instructions:
+      type: boolean
+      label: 'Show Instructions'
+    expiration:
+      type: integer
+      label: 'Default Expiration'
+    frequency:
+      type: integer
+      label: 'Default Frequency'
+    attempts:
+      type: integer
+      label: 'Max Attempts'
+    prune:
+      type: boolean
+      label: 'Prune Challenges'
+    prune_responses:
+      type: boolean
+      label: 'Prune Responses'

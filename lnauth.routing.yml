@@ -2,7 +2,7 @@ lnauth.admin:
   path: '/admin/config/people/lnauth'
   defaults:
     _title: 'Lightning Network Authentication'
-    _form: 'Drupal\lnauth\Form\AdminForm'
+    _form: 'Drupal\lnauth\Form\LnAuthAdminForm'
   requirements:
     _permission: 'administer lnauth'
 

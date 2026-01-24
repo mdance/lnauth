@@ -1,58 +1,78 @@
-(function ($, Drupal) {
-  'use strict';
+(function(Drupal, drupalSettings, once) {
+  "use strict";
 
-  var ns = 'lnauth';
+  const ns = "lnauth";
 
   Drupal.behaviors[ns] = {
-    attach: function (context, settings) {
-      var $window, subsettings, instance, k1, frequency, attempts, url;
+    attach(context) {
+      const settings = drupalSettings[ns];
+      if (!settings) return;
 
-      $window = $(window);
+      // Use <body> as a stable place to host once() anchors.
+      const body = document.body;
 
-      if (settings[ns]) {
-        subsettings = settings[ns];
+      Object.keys(settings).forEach(delta => {
+        const instance = settings[delta] || {};
+        const k1 = instance.k1;
+        const url = instance.url;
 
-        for (var delta in subsettings) {
-          instance = subsettings[delta];
+        // frequency in ms; default 1000 if missing/invalid.
+        const frequency =
+          Number(instance.frequency) > 0 ? Number(instance.frequency) : 1000;
 
-          k1 = instance['k1'];
-          frequency = instance['frequency'];
-          attempts = instance['attempts'];
-          url = instance['url'];
+        // attempts: 0 => unlimited; otherwise positive integer.
+        const attempts = Number.isFinite(Number(instance.attempts))
+          ? Number(instance.attempts)
+          : 0;
 
-          $window.once(k1).each(
-            function() {
-              var interval, attempt;
+        if (!k1 || !url) return;
 
-              attempt = 0;
-
-              interval = setInterval(
-                function() {
-                  if (attempts == 0 || attempt <= attempts) {
-                    $.get(
-                      url,
-                      {},
-                      function (response, status) {
-                        if (response && response.authenticated === true) {
-                          clearInterval(interval);
-                          location.reload();
-                        }
-                      }
-                    );
-                  }
-
-                  attempt++;
-                },
-                frequency
-              );
-
-              if (attempts != 0 && attempt >= attempts) {
-                clearInterval(interval);
-              }
-            }
-          );
+        // Create a unique hidden anchor per k1 so once() can prevent duplicates.
+        const anchorId = `${ns}-${k1}`;
+        let anchor = document.getElementById(anchorId);
+        if (!anchor) {
+          anchor = document.createElement("span");
+          anchor.id = anchorId;
+          anchor.hidden = true;
+          body.appendChild(anchor);
         }
-      }
+
+        once(`${ns}:${k1}`, anchor).forEach(() => {
+          let attempt = 0;
+
+          const interval = window.setInterval(async () => {
+            // Stop if we've reached the max attempt count (when attempts != 0).
+            if (attempts !== 0 && attempt >= attempts) {
+              window.clearInterval(interval);
+              return;
+            }
+
+            attempt += 1;
+
+            try {
+              const res = await fetch(url, {
+                method: "GET",
+                credentials: "same-origin",
+                headers: {
+                  Accept: "application/json"
+                }
+              });
+
+              if (!res.ok) return;
+
+              // If the endpoint sometimes returns non-JSON, this will throw and be caught.
+              const data = await res.json();
+
+              if (data && data.authenticated === true) {
+                window.clearInterval(interval);
+                window.location.reload();
+              }
+            } catch (e) {
+              // Optional: add console.debug(e);
+            }
+          }, frequency);
+        });
+      });
     }
-  }
-})(jQuery, Drupal, drupalSettings);
+  };
+})(Drupal, drupalSettings, once);

@@ -17,6 +17,7 @@ use Drupal\Core\State\StateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\externalauth\ExternalAuthInterface;
+use Drupal\user\UserInterface;
 use function tkijewski\lnurl\encodeUrl;
 
 class LnAuthService implements LnAuthServiceInterface {
@@ -28,6 +29,24 @@ class LnAuthService implements LnAuthServiceInterface {
    */
   protected Config $config;
 
+  /**
+   * Provides the constructor method.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The configuration factory.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   The state.
+   * @param \Drupal\Core\Database\Connection $connection
+   *   The database connection.
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   The logger service.
+   * @param \Drupal\externalauth\ExternalAuthInterface $externalAuth
+   *   The external authentication service.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
+   * @param \Drupal\Core\PageCache\ResponsePolicy\KillSwitch $killSwitch
+   *   The kill switch service.
+   */
   public function __construct(
     protected ConfigFactoryInterface $configFactory,
     protected StateInterface $state,
@@ -394,20 +413,21 @@ EOF;
   /**
    * {@inheritDoc}
    */
-  public function getChallenge($input) {
+  public function getChallenge(string $input): array {
     $query = $this->connection->select(LnAuthConstants::TABLE_CHALLENGES, 'b');
 
     $query->fields('b');
     $query->condition('challenge', $input);
 
     $output = $query->execute();
+
     return $output->fetchAll();
   }
 
   /**
    * {@inheritDoc}
    */
-  public function verifyChallenge($parameters) {
+  public function verifyChallenge(array $parameters): bool {
     $output = FALSE;
 
     //$action = $parameters['LnAuthConstants::KEY_ACTION'] ?? '';
@@ -528,14 +548,14 @@ EOF;
   /**
    * {@inheritDoc}
    */
-  public function getAuthName($input): string {
+  public function getAuthName(string $input): string {
     return hash('sha1', $input);
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getCheckUrl($k1): Url {
+  public function getCheckUrl(string $k1): Url {
     $route_name = LnAuthConstants::ROUTE_CHECK;
 
     $options = [
@@ -555,7 +575,7 @@ EOF;
   /**
    * {@inheritDoc}
    */
-  public function getChallengeResponses($input) {
+  public function getChallengeResponses(int $input): array {
     $query = $this->connection->select(LnAuthConstants::TABLE_RESPONSES, 'b');
 
     $query->fields('b');
@@ -568,7 +588,7 @@ EOF;
   /**
    * {@inheritDoc}
    */
-  public function loginKey($input) {
+  public function loginKey(string $input): bool|UserInterface {
     $authname = $this->getAuthname($input);
 
     return $this->externalAuth->login($authname, LnAuthConstants::PROVIDER);

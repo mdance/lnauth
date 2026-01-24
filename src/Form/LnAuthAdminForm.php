@@ -12,7 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides the AdminForm class.
  */
-class AdminForm extends ConfigFormBase {
+class LnAuthAdminForm extends ConfigFormBase {
 
   /**
    * Provides the constructor method.
@@ -143,14 +143,14 @@ class AdminForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     parent::validateForm($form, $form_state);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $values = $form_state->cleanValues()->getValues();
 
     $this->service->saveConfiguration($values);

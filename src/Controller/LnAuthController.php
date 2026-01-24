@@ -3,8 +3,9 @@
 namespace Drupal\lnauth\Controller;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Messenger\MessengerTrait;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Utility\Error;
 use Drupal\lnauth\LnAuthConstants;
 use Drupal\lnauth\LnAuthServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -19,43 +20,37 @@ class LnAuthController implements ContainerInjectionInterface {
   use StringTranslationTrait;
 
   /**
-   * Provides the module service.
+   * Provides the constructor method.
    *
-   * @var \Drupal\lnauth\LnAuthServiceInterface
-   */
-  protected $service;
-
-  /**
-   * Provides the constructor.
+   * @param \Drupal\lnauth\LnAuthServiceInterface $service
+   *   The module service.
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   The logger service.
    */
   public function __construct(
-    LnAuthServiceInterface $service
+    protected LnAuthServiceInterface $service,
+    protected LoggerChannelInterface $logger,
   ) {
-    $this->service = $service;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('lnauth')
-    );
   }
 
   /**
    * Provides the login route.
    *
    * @return array
+   *   The login render array.
    */
-  public function login() {
-    $output = $this->service->renderQrCode();
-
-    return $output;
+  public function login(): array {
+    return $this->service->renderQrCode();
   }
 
   /**
-   * Provides the authentication callback.
+   * Provides the callback route.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   The callback json response.
    */
   public function callback(Request $request) {
     $output = new JsonResponse();
@@ -71,7 +66,7 @@ class LnAuthController implements ContainerInjectionInterface {
         $error = FALSE;
       }
     } catch (\Exception $e) {
-      watchdog_exception('lnauth', $e);
+     Error::logException($this->logger, $e);
     }
 
     if ($error) {
@@ -97,7 +92,13 @@ class LnAuthController implements ContainerInjectionInterface {
   }
 
   /**
-   * Provides the check callback.
+   * Provides the check callback route.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   The check json response.
    */
   public function check(Request $request) {
     $output = new JsonResponse();
@@ -137,6 +138,8 @@ class LnAuthController implements ContainerInjectionInterface {
           }
         }
       } catch (\Exception $e) {
+        Error::logException($this->logger, $e);
+
         $error = TRUE;
       }
     }
@@ -155,6 +158,16 @@ class LnAuthController implements ContainerInjectionInterface {
     $output->setData($data);
 
     return $output;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('lnauth'),
+      $container->get('logger.channel.lnauth'),
+    );
   }
 
 }
