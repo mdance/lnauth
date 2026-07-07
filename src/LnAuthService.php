@@ -368,7 +368,6 @@ EOF;
 
     $query[LnAuthConstants::KEY_K1] = $k1;
     $query[LnAuthConstants::KEY_TAG] = LnAuthConstants::TAG_LOGIN;
-    $query['XDEBUG_SESSION_START'] = 'phpstorm';
 
     return new Url($route_name, [], $options);
   }
@@ -522,7 +521,7 @@ EOF;
             $fields['created'] = time();
             $fields['signature'] = $sig;
             $fields['key'] = $key;
-            $fields['status'] = $output;
+            $fields['status'] = (int) $output;
 
             $query->fields($fields);
 
@@ -635,7 +634,10 @@ EOF;
     $query = $this->connection->delete(LnAuthConstants::TABLE_CHALLENGES);
 
     $expiration = $this->getExpiration();
-    $value = time() + $expiration;
+    // Delete only challenges created before the expiration window, i.e. those
+    // whose creation time is older than (now - expiration). In-flight
+    // challenges created within the window must survive.
+    $value = time() - $expiration;
 
     $query->condition('created', $value, '<=');
     $query->condition('status', LnAuthConstants::STATUS_NEW);
@@ -647,43 +649,28 @@ EOF;
    * {@inheritDoc}
    */
   public function pruneResponses(): void {
-    $keys = [];
+    // Prune only stale/expired responses using the row's own creation
+    // timestamp, mirroring the challenge TTL. Membership in the authmap
+    // (i.e. a successfully-registered user) must NOT be used as the prune
+    // criterion, and authmap.data is JSON, not serialized PHP.
+    $query = $this->connection->delete(LnAuthConstants::TABLE_RESPONSES);
 
-    $query = $this->connection->select('authmap', 'a');
+    $expiration = $this->getExpiration();
+    $value = time() - $expiration;
 
-    $query->fields('a', ['data']);
-    $query->condition('provider', LnAuthConstants::PROVIDER);
+    $query->condition('created', $value, '<=');
 
-    $results = $query->execute();
-
-    foreach ($results as $result) {
-      $data = unserialize($result->data);
-
-      if (isset($data['key'])) {
-        $keys[] = $data['key'];
-      }
-    }
-
-    $total = count($keys);
-
-    if ($total) {
-      $query = $this->connection->delete(LnAuthConstants::TABLE_RESPONSES);
-
-      $query->condition('key', $keys, 'IN');
-
-      $query->execute();
-    }
+    $query->execute();
   }
 
   /**
    * {@inheritDoc}
    */
   public function purgeCache(): void {
-    $query = $this->connection->delete('cache_page');
-
-    $query->condition('cid', '%user/login%', 'LIKE');
-
-    $query->execute();
+    // Invalidate the internal page cache in a backend-agnostic way. The old
+    // implementation issued a MySQL-flavoured LIKE DELETE against the
+    // cache_page table, which fatals on non-database cache backends.
+    \Drupal::service('cache.page')->deleteAll();
   }
 
 }
