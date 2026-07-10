@@ -240,8 +240,12 @@ EOF;
         $text = Markup::create($text);
         $url = Url::fromRoute(LnAuthConstants::ROUTE_LOGIN);
 
+        // A fixed width that comfortably fits the QR on desktop; the
+        // `lnauth-dialog` class drives a near-full-width layout on phones (see
+        // css/lnauth.css), where 25% was unusably tiny.
         $dialog_options = [
-          'width' => '25%',
+          'width' => 360,
+          'dialogClass' => 'lnauth-dialog',
         ];
 
         $dialog_options = Json::encode($dialog_options);

@@ -39,4 +39,14 @@
 .lnauth-open-wallet {
   display: inline-flex; }
 
+/* The login modal: near-full-width on phones (25% / a fixed 360px is tiny). */
+@media (max-width: 480px) {
+  .ui-dialog.lnauth-dialog {
+    width: calc(100vw - 1.5rem) !important;
+    max-width: calc(100vw - 1.5rem) !important;
+    left: 0.75rem !important;
+    right: 0.75rem !important; }
+  .ui-dialog.lnauth-dialog .ui-dialog-content {
+    width: auto !important; } }
+
 /*# sourceMappingURL=lnauth.css.map */
