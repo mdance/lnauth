@@ -28,4 +28,15 @@
   border-color: #fada5e;
   background-color: #fada5e; }
 
+.lnauth-qrcode-link {
+  display: inline-block;
+  line-height: 0; }
+
+.lnauth-qrcode-link img {
+  max-width: 100%;
+  height: auto; }
+
+.lnauth-open-wallet {
+  display: inline-flex; }
+
 /*# sourceMappingURL=lnauth.css.map */

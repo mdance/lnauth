@@ -324,6 +324,11 @@ EOF;
       ],
     ];
 
+    // The bech32 LNURL as a `lightning:` deep link. On a phone this opens the
+    // installed wallet directly — the QR is useless when you're already on the
+    // device you'd otherwise scan it with.
+    $uri = 'lightning:' . $data;
+
     if ($this->getShowInstructions()) {
       $args = [];
 
@@ -335,14 +340,35 @@ EOF;
       $args['@link'] = $link;
 
       $output['instructions'] = [
-        '#markup' => t('Please scan the following qr code with a @link', $args),
+        '#markup' => t('Scan this QR code with a @link, or tap it (or the button below) to open your wallet app on this device.', $args),
       ];
     }
 
+    // Wrap the QR in the deep link so tapping it on a phone opens the wallet.
     $output['qrcode'] = [
       '#type' => 'html_tag',
-      '#tag' => 'img',
-      '#attributes' => $attributes,
+      '#tag' => 'a',
+      '#attributes' => [
+        'href' => $uri,
+        'class' => ['lnauth-qrcode-link'],
+        'aria-label' => t('Open in your Lightning wallet'),
+      ],
+      'img' => [
+        '#type' => 'html_tag',
+        '#tag' => 'img',
+        '#attributes' => $attributes,
+      ],
+    ];
+
+    // An explicit tap target for phone users — the primary action on mobile.
+    $output['wallet_link'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'a',
+      '#attributes' => [
+        'href' => $uri,
+        'class' => ['btn-lightning', 'lnauth-open-wallet'],
+      ],
+      '#value' => t('Open in wallet app'),
     ];
 
     return $output;
