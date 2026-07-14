@@ -65,7 +65,13 @@
 
               if (data && data.authenticated === true) {
                 window.clearInterval(interval);
-                window.location.reload();
+                // Return the visitor to where they were headed (?destination=),
+                // else reload the current page.
+                if (data.redirect) {
+                  window.location.assign(data.redirect);
+                } else {
+                  window.location.reload();
+                }
               }
             } catch (e) {
               // Optional: add console.debug(e);

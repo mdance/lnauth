@@ -4,6 +4,7 @@
  * Provides lightning network authentication functionality.
  */
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\lnauth\LnAuthConstants;
 
@@ -11,6 +12,21 @@ use Drupal\lnauth\LnAuthConstants;
  * Implements hook_form_alter().
  */
 function lnauth_form_user_login_form_alter(&$form, FormStateInterface $form_state) {
+  // Remember where the visitor was headed (?destination=) so the asynchronous
+  // Lightning login can return them there instead of the default profile page.
+  // Captured here because the login QR + modal both live on this form, so this
+  // always runs on /user/login?destination=… before the wallet handshake.
+  $request = \Drupal::request();
+  if ($request->hasSession()) {
+    $destination = (string) $request->query->get('destination', '');
+    if ($destination !== '' && _lnauth_is_local_path($destination)) {
+      $request->getSession()->set(LnAuthConstants::KEY_DESTINATION, $destination);
+    }
+    else {
+      $request->getSession()->remove(LnAuthConstants::KEY_DESTINATION);
+    }
+  }
+
   /** @var \Drupal\lnauth\LnAuthServiceInterface $service */
   $service = \Drupal::service('lnauth');
 
@@ -39,6 +55,15 @@ function lnauth_form_user_login_form_alter(&$form, FormStateInterface $form_stat
 
     $form[LnAuthConstants::KEY_LOGIN_FORM] = $content;
   }
+}
+
+/**
+ * Whether a destination is a safe internal path (no open-redirect).
+ */
+function _lnauth_is_local_path(string $destination): bool {
+  return str_starts_with($destination, '/')
+    && !str_starts_with($destination, '//')
+    && !UrlHelper::isExternal($destination);
 }
 
 /**

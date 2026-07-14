@@ -155,6 +155,18 @@ class LnAuthController implements ContainerInjectionInterface {
       'authenticated' => $authenticated,
     ];
 
+    // On success, return where the visitor was headed (captured from
+    // ?destination= on the login form) so the client redirects there instead of
+    // reloading the login page (which would bounce them to their profile).
+    if ($authenticated && $request->hasSession()) {
+      $session = $request->getSession();
+      $destination = (string) $session->get(LnAuthConstants::KEY_DESTINATION, '');
+      $session->remove(LnAuthConstants::KEY_DESTINATION);
+      if ($destination !== '' && \Drupal\Component\Utility\UrlHelper::isExternal($destination) === FALSE && str_starts_with($destination, '/') && !str_starts_with($destination, '//')) {
+        $data['redirect'] = $destination;
+      }
+    }
+
     $output->setData($data);
 
     return $output;
